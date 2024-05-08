@@ -129,6 +129,29 @@ h1, .h1 {
   }
 }
 
+.active {
+  margin: 0.5rem
+  
+}
+
+.not_active {
+  visibility: hidden;
+} 
+
+.flavour{
+  text-shadow: 2px 2px 5px blueviolet;
+}
+
+.button-container{
+  display: flex;
+  flex-direction: column ;
+  flex-wrap: wrap;
+  gap:2px;
+  justify-content: center;
+  align-items:center;
+}
+
+
 h2, .h2 {
   font-size: calc(1.325rem + 0.9vw);
 }

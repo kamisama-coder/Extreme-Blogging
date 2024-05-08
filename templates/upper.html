@@ -1,7 +1,6 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
@@ -10,9 +9,8 @@
     {% endblock %}
     <title>Boiling Plate</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-  </head>
-  <body>
-    
+</head>
+<body> 
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
@@ -20,7 +18,7 @@
                 <a class="nav-link active" aria-current="page" href="{{ url_for('my_route')}}">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="#">Link</a>
+                <a class="nav-link" href="{{ url_for('new_show') }}">Price Tracker</a>
               </li>
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"> Dropdown
@@ -41,14 +39,15 @@
             </form>
         </div>
       </nav>
-	<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-  {% block content %}
-  {% endblock %}
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% block content %}  
+{% endblock %}
   
-  {% block scripts %}       
+{% block scripts %}       
      {{ bootstrap.load_js() }}
-  {% endblock %}
+{% endblock %}
 
   
-  </body>
+</body>
 </html>  
+

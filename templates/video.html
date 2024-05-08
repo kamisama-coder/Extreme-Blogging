@@ -1,0 +1,15 @@
+{% extends 'upper.html' %}   
+{% block content %}
+<div class="container">
+{% for read in list %}
+<div class="player">
+   <video  id="player-demo" width="640" height="267" poster="data:image/jpeg;base64,{{read['pics']}}" style="max-width: 100%" controls="">
+      <source src="data:video/mp4;base64,{{read['video']}}" type="video/mp4">
+      <track src="dist/mediaelement.vtt" srclang="en" label="English" kind="captions" type="text/vtt">
+      <track src="dist/mediaelement_german.vtt" srclang="de" label="Deutsch" kind="subtitles" type="text/vtt">
+   </video>
+   <button type="button" class="btn btn-success"><a href="{{url_for('profile', index=read['id'])}}">more than 2000</a></button>   
+</div>
+{% endfor %}
+</div>
+{% endblock %}

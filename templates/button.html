@@ -1,0 +1,31 @@
+{% extends"upper.html" %}
+{% block content %}
+<div class="button-container">
+<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=0-500)}}">0-500</a></button>
+<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=500-1000)}}">500-1000</a></button>
+<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=1000-1500)}}">1000-1500</a></button>
+<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=2000)}}">more than 2000</a></button>
+<div id="output"></div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{%endblock%}
+  
+<!-- {% block scripts %}       
+{{ super() }}
+<script>
+$(".btn").on("click",function(){fetch("/promotional_site", {
+    "method": "POST",
+    "headers": {"Content-Type": "application/json"},
+    "body":  JSON.stringify({data:$(this).text()}),
+})
+.then(response => {
+        window.location = response.url; // Redirect to the new URL
+})
+.catch(error => {
+    console.error('Fetch error:', error);
+    // Handle other types of errors, such as network issues
+});
+});
+</script>
+{% endblock %} -->
+
