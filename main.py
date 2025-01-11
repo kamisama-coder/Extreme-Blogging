@@ -1,25 +1,16 @@
-from datetime import date
 from flask import Flask, abort, render_template, redirect, url_for, flash, send_from_directory,request,session,jsonify
-from flask_bootstrap import Bootstrap5
-from flask_ckeditor import CKEditor
 from flask_gravatar import Gravatar
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from flask_sqlalchemy import SQLAlchemy
-from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_talisman import Talisman
 from sqlalchemy.orm import relationship
-from werkzeug.utils import secure_filename
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from flask_wtf.file import FileField, FileRequired, FileAllowed, MultipleFileField
 from wtforms.validators import DataRequired, URL, Email, Length
 import random
 import time
-from PIL import Image
-import io
 import base64
-from price_tracker import Revolution
 
 
 app = Flask(__name__)
@@ -31,7 +22,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///dukan.db"
 db = SQLAlchemy()
 db.init_app(app)
 app.config["TEMPLATES_AUTO_RELOAD"] = True
-bootstrap = Bootstrap5(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
@@ -54,11 +44,7 @@ class MyForm(FlaskForm):
     name = StringField('name', validators=[DataRequired()])
     email = StringField('email', validators=[DataRequired(),Email(message="incorrect email")])
     password = PasswordField('password', validators=[DataRequired(), Length(min=7, message="should be greater than 7")])
-    Submit = SubmitField('Submit')
-
-class Seachform(FlaskForm):
-    searched =  StringField('searched', validators=[DataRequired()])
-    Submit = SubmitField('Submit')
+    submit = SubmitField('Submit')
 
 class Form(FlaskForm):
     product = StringField('product', validators=[DataRequired()])
@@ -115,8 +101,6 @@ class Book(db.Model):
 
 class Follow(db.Model):
     __tablename__ = 'follows'
-
-    
     id = db.Column(db.Integer, primary_key=True)
     follower_id = db.Column(
         db.Integer,nullable=False)
@@ -127,18 +111,9 @@ class Follow(db.Model):
 with app.app_context():
     db.create_all()    
 
-@app.route('/listed',  methods=['GET', 'POST'])
-def my_route():
-    # result = db.session.execute(db.select(Description).order_by(Description.id)).scalars()
-    # all_images = db.session.execute(db.select(Book).order_by(Book.id)).scalars()
-    # listing = {}
-    # for i in result:
-    #     listing[i.id] = []
-    # for j in all_images:
-    #     corrected_blob = base64.b64encode(j.my_blob).decode('utf-8')
-    #     listing[j.author.id].append(corrected_blob)
-    # all_books = db.session.execute(db.select(Description).order_by(Description.id)).scalars()     
 
+@app.route('/button',  methods=['GET', 'POST'])
+def button():
     return render_template("button.html")
 
 
@@ -167,8 +142,9 @@ def forgot_password():
             return redirect(url_for('forgot_password'))
     return render_template('otp.html', generate_number=session.get('otpe'))        
 
+
 @app.route('/my_listed', methods=['GET', 'POST'])
-def hello_world1():
+def home():
     result = db.session.execute(db.select(Description).order_by(Description.id)).scalars()
     all_images = db.session.execute(db.select(Book).order_by(Book.id)).scalars()
     change = {}
@@ -180,32 +156,62 @@ def hello_world1():
     all_books =  db.session.execute(db.select(Description).order_by(Description.id)).scalars()
     return render_template("admin.html", all_books=all_books, check=current_user, change=change)
 
-@app.route('/',  methods=['GET', 'POST'])
-def hello_name():
-   regs = MyForm()
-   if regs.validate_on_submit():
-       meow = regs.email.data
-       book = db.session.execute(db.select(Details).where(Details.email == meow)).scalar()
-       if book:
-           flash("email already exists")
-           return render_template("login.html")
-       new_password = generate_password_hash(regs.password.data, method='pbkdf2', salt_length=16)
-       new_book = Details(name=regs.name.data, email=regs.email.data, password=new_password, followers=0)
-       db.session.add(new_book)
-       db.session.commit()
-       login_user(new_book)
-       return render_template("product.html")
-   return render_template("Regs.html", regs=regs)
+@app.route('/', methods=['GET', 'POST'])
+def registration():
+    regs = MyForm()
+    if regs.validate_on_submit():
+
+        meow = regs.email.data
+        book = db.session.execute(db.select(Details).where(Details.email == meow)).scalar()
+        
+        if book:
+            flash("Email already exists. Please log in.")
+            return redirect(url_for('login'))
+
+        new_password = generate_password_hash(regs.password.data, method='pbkdf2:sha256:260000', salt_length=16)
+        
+        new_book = Details(
+            name=regs.name.data,
+            email=regs.email.data,
+            password=new_password,
+            followers=0
+        )
+        db.session.add(new_book)
+        db.session.commit()
+
+        login_user(new_book)
+
+        flash("Registration successful!")
+        return redirect(url_for('button'))
+
+    return render_template("Regs.html", regs=regs)
 
 
 @app.route('/profile/<index>',  methods=['GET', 'POST'])
 def profile(index):
+   
    if request.method == "POST":
-      follow = Follow(follower_backref=current_user.id, following_to_backref=index)
-      db.session.add(follow)
-      db.session.commit()
+        
+        follow_record = db.session.execute(
+        db.select(Follow).where(
+        Follow.follower_id == current_user.id,
+        Follow.following_to == index
+        )).scalar()
+        if(follow_record == None): 
+            follow = Follow(follower_id=current_user.id, following_to=index)
+            db.session.add(follow)
+            db.session.commit()
+
+            followed_user = db.session.execute(
+                db.select(Details).where(Details.id == index)
+            ).scalar_one_or_none()
+
+            if followed_user is not None:
+                followed_user.followers = (followed_user.followers or 0) + 1
+                db.session.commit()
+
    if request.method == "GET":
-    #   thakan = current_user.following_to_list.filter_by(following_to=index).first() 
+      
       result1 = db.session.execute(db.select(Description).order_by(Description.id)).scalars()
       all_images = db.session.execute(db.select(Book).order_by(Book.id)).scalars()
       listing = {}
@@ -224,21 +230,32 @@ def profile(index):
         new_list.append(book_to_update)     
       result= db.get_or_404(Details, index)
       followers = db.session.execute(db.select(Follow).where(Follow.follower_id == current_user.id )).scalars()
-      check_list = []
-      for follower in followers: 
-          check_list.append(follower.following_to)    
-      return render_template('profile.html', result=result, all_books=all_books, listing=listing, golang=new_list, current_user=current_user, check_list=check_list)
+      followers_list = list(followers)
+      size = len(followers_list)  
+      follow_record = db.session.execute(
+        db.select(Follow).where(
+        Follow.follower_id == current_user.id,
+        Follow.following_to == index
+        )).scalar()
+      return render_template('profile.html', result=result, all_books=all_books, listing=listing, golang=new_list, current_user=current_user, size=size, thakan=follow_record)
     
 @app.route('/unfollow/<index>',  methods=['GET', 'POST'])
 def check(index):
-    user_to_unfollow = current_user.following_to_list.filter_by(
-                following_to=index).first()
-    if user_to_unfollow:
-                db.session.delete(user_to_unfollow)
+    follow_record = db.session.execute(
+        db.select(Follow).where(
+        Follow.follower_id == current_user.id,
+        Follow.following_to == index
+        )).scalar()
+    db.session.delete(follow_record) 
+    db.session.commit()
+    followed_user = db.session.execute(db.select(Details).where(Details.id == index)).scalar()
 
+    if followed_user is not None:
+            followed_user.followers = (followed_user.followers or 0) - 1
+            db.session.commit()
 
 @app.route('/login',  methods=['GET', 'POST'])
-def bhoot():
+def login():
     loginform = LoginForm()
     if loginform.validate_on_submit():
         password = loginform.password.data
@@ -248,27 +265,21 @@ def bhoot():
       
         if not user:
             flash("That email does not exist, please try again.")
-            return redirect(url_for('bhoot'))
+            return redirect(url_for('login'))
      
         elif not check_password_hash(user.password, password):
             flash('Password incorrect, please try again.')
-            return redirect(url_for('bhoot'))
+            return redirect(url_for('login'))
         else:
             login_user(user)
-            return redirect(url_for('my_route'))
+            return redirect(url_for('button'))
         
         
     return render_template("login.html", loginform=loginform, current_user=current_user)
-
-@login_required
-@app.route('/search', methods=['GET'])
-def search():
-    billi = Seachform()
-    pass
     
 @login_required
-@app.route('/create_list',  methods=['GET', 'POST'])
-def hello_world():
+@app.route('/product_registration',  methods=['GET', 'POST'])
+def product_registration():
     series =  Form()
     if series.validate_on_submit():
 
@@ -285,7 +296,7 @@ def hello_world():
       db.session.commit()
       
           
-      return redirect(url_for('my_route'))
+      return redirect(url_for('home'))
 
       
     return render_template("pregs.html", series=series)
@@ -294,14 +305,13 @@ def hello_world():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-
 @app.route('/promotional_site/<index>',  methods=['GET', 'POST'])
 def promotional(index):
   if "-" in index:  
     text = index
     numbers = text.split('-')
     first_number = int(numbers[0])
-    second_number = int(numbers[1])
+    second_number = int(numbers[1]) 
     all_images = db.session.execute(db.select(Book).order_by(Book.id)).scalars()
     list=[]
     for images in all_images:
@@ -331,63 +341,25 @@ def promotional(index):
 
 @app.route('/delete/<index>',  methods=['GET', 'POST'])
 def delete(index):
+    # Retrieve the description to delete
     book_to_delete = db.get_or_404(Description, index)
+
+    media_to_delete = db.session.execute(
+        db.select(Book).where(Book.author_id == book_to_delete.id)
+    ).scalars().all()
+
     db.session.delete(book_to_delete)
+
+    for media in media_to_delete:
+        db.session.delete(media)
+
     db.session.commit()
-    return redirect(url_for('my_route'))
 
-@app.route('/edit/<index>', methods=['GET', 'POST'])
-def edit(index):
-    edit = db.get_or_404(Description, index)
-    edit_form = Form(product=edit.product, price=edit.price, description=edit.description)
-    if edit_form.validate_on_submit():
-        book_to_update = db.get_or_404(Description, index)
-        book_to_update.product = edit_form.data.product
-        book_to_update.price = edit_form.data.price
-        book_to_update.description = edit_form.data.description
-        db.session.commit() 
-        try:
-           return redirect(url_for('my_route'))
-        except Exception:
-            return redirect(url_for('my_route'))
+    return redirect(url_for('button'))
 
-    return render_template('pregs.html', series=edit_form)
-
-@app.route('/selenium/<object>', methods=['GET','POST'])
-def selenium(object):
-     book_to_update = Follow(follower_id=current_user.id,following_to=object)
-     db.session.add(book_to_update)
-     db.session.commit()
-         
-
-@app.route('/nvidia', methods=['GET','POST'])
-def new_show():
-    updated_book = db.session.execute(db.select(Follow).where(Follow.follower_id == current_user.id )).scalars()
-    updated_list =[]
-    for book in updated_book:
-        new_id = book.following_to
-        object = db.session.query(Description).filter_by(id=new_id).first()
-        print(object.price)
-        updated_list.append(object)    
-    revolution=Revolution("not_required", "not_required")
-    bastard = []
-    dict = {}
-    for updation in updated_list:
-      if int(revolution.method1(updation.url)) >= int(updation.price):
-          dict[updation] = "Yes"
-          bastard.append(dict)
-      else:
-          dict[updation] = "Fuck off"
-          bastard.append(dict)      
-    return dict      
-
-@app.route('/deleting/index', methods=['GET','POST'])
-def true_man(index):
-    updated_book = db.session.execute(db.select(Follow).where(Follow.follower_id == current_user.id )).scalars()
-    for books in updated_book:
-        if books.following_to == index:
-            db.session.delete(books)
-            db.session.commit()
+@app.route('/blog/<index>', methods=['GET', 'POST'])
+def blog(index):
+    pass
              
 # Create an admin-only decorator
 # def admin_only(f):

@@ -1,22 +1,83 @@
 {% extends "upper.html" %}
-{% from 'bootstrap5/form.html' import render_field %}
-
 {% block content %}
-<form method="post" enctype="multipart/form-data">
-    {{ series.csrf_token() }}
-    {{ render_field(series.product) }}
-    {{ render_field(series.price) }}
-    {{ render_field(series.description) }}
- 
-    {{ render_field(series.data_file) }}
+<form method="POST" enctype="multipart/form-data">
+    {{ series.hidden_tag() }}
 
-    {{ render_field(series.company_logo) }}
+    <!-- Product -->
+    <div class="mb-3">
+        {{ series.product.label(class="form-label") }}
+        {{ series.product(class="form-control") }}
+        {% for error in series.product.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-    {{ render_field(series.promotion_video_file) }}
-    {{ render_field(series.category) }}
-    {{ render_field(series.url)      }}
+    <!-- Price -->
+    <div class="mb-3">
+        {{ series.price.label(class="form-label") }}
+        {{ series.price(class="form-control") }}
+        {% for error in series.price.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
 
-    {{ render_field(series.enter) }}
- 
+    <!-- Description -->
+    <div class="mb-3">
+        {{ series.description.label(class="form-label") }}
+        {{ series.description(class="form-control") }}
+        {% for error in series.description.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Data File -->
+    <div class="mb-3">
+        {{ series.data_file.label(class="form-label") }}
+        {{ series.data_file(class="form-control") }}
+        {% for error in series.data_file.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Company Logo -->
+    <div class="mb-3">
+        {{ series.company_logo.label(class="form-label") }}
+        {{ series.company_logo(class="form-control") }}
+        {% for error in series.company_logo.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Promotion Video File -->
+    <div class="mb-3">
+        {{ series.promotion_video_file.label(class="form-label") }}
+        {{ series.promotion_video_file(class="form-control") }}
+        {% for error in series.promotion_video_file.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Category -->
+    <div class="mb-3">
+        {{ series.category.label(class="form-label") }}
+        {{ series.category(class="form-control") }}
+        {% for error in series.category.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- URL -->
+    <div class="mb-3">
+        {{ series.url.label(class="form-label") }}
+        {{ series.url(class="form-control") }}
+        {% for error in series.url.errors %}
+            <div class="text-danger">{{ error }}</div>
+        {% endfor %}
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-grid">
+        {{ series.enter(class="btn btn-primary") }}
+    </div>
 </form>
 {% endblock %}

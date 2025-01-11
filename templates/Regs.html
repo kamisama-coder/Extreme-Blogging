@@ -1,4 +1,4 @@
-{% extends"upper.html" %}{% from 'bootstrap5/form.html' import render_form %}
+{% extends"upper.html" %}
 {% block content %}
 {% with messages = get_flashed_messages() %}
 {% if messages %}
@@ -7,5 +7,36 @@
 {% endfor %}
 {% endif %}
 {% endwith %}
-{{ render_form(regs,novalidate=True,button_map={'submit': 'primary'}) }}
+<form method="POST" action="{{ url_for('registration') }}" >
+  {{ regs.hidden_tag() }}
+  
+  <div class="mb-3">
+      {{ regs.name.label(class="form-label") }}
+      {{ regs.name(class="form-control") }}
+      {% for error in regs.name.errors %}
+          <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+  </div>
+
+  <div class="mb-3">
+      {{ regs.email.label(class="form-label") }}
+      {{ regs.email(class="form-control") }}
+      {% for error in regs.email.errors %}
+          <div class="text-danger">{{ error }}</div>
+      {% endfor %}
+  </div>
+
+  <div class="mb-3">
+    {{ regs.password.label(class="form-label") }}
+    {{ regs.password(class="form-control", type="password") }}
+    {% for error in regs.password.errors %}
+        <div class="text-danger">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="d-grid">
+    {{ regs.submit(class="btn btn-primary") }}
+  </div>
+
+</form>
 {% endblock %}  

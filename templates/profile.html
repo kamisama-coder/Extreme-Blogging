@@ -1,82 +1,71 @@
-{% extends"upper.html" %}
+{% extends "upper.html" %}
 {% block content %}
 <div class="h-100 d-flex align-items-center justify-content-center">
-      <img src="{{ result.email | gravatar}}">  
-      <h1 class="flavour">followers: {{result.followers}}</h1>
-      <p class="not_active">{{result.id}}</p>
-      <h2 class="not_active">{{result.followers}}</h2>
-    {% if current_user.id != result.id %}  
-      <h1 class="not_active">fuckoff</h1>
-    {% elif thakan is none %}  
-      <button type="button" class="btn btn-success">follow</button> 
-    {% else %}  
-      <button type="button" class="btn btn-danger">unfollow</button> 
-    {% endif %} 
+    <img src="{{ result.email | gravatar }}" alt="User Gravatar">  
+    <h1 class="flavour">followers: {{ size }}</h1>
+    <p class="not_active">{{ result.id }}</p>
+    {% if thakan is none %}
+        <button type="button" class="btn btn-success">Follow</button> 
+    {% else %}
+        <button type="button" class="btn btn-danger">Unfollow</button> 
+    {% endif %}
 </div>
-{% for i in golang%}
-{% set has_run = "false" %}
-{% for j in i %}
-{% if result.id == j.eat.id %}
-{% if has_run == "false" : %}  
-<h1>{{j.category}}</h1>
-{% endif %}
-{% set has_run = "true" %}  
-<div class="card mb-3" style="max-width: 540px;">
-    <div class="row g-0">
-      <div class="col-md-4">
-        {% for pic in listing[j.id] %}
-        
-        <img src="data:image/jpeg;base64,{{ pic }}" class="img-fluid rounded-start" >
-        {% endfor %}
-        
-      </div>  
-      <div class="col-md-8"> 
-        <div class="card-body">
-          <h5 class="card-title">{{j.product}}</h5>
-          <p class="card-text">{{j.description}}</p>
-          <p class="card-text"><small class="text-body-secondary">$ {{j.price}}</small></p>
-          {% if j.id in check_list  %}
-          <p> life is garbage </p>
-          {% else %}
-          <button type="button" class="btn btn-danger" name="{{j.id}}">Add Product</button>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-{% endif %}
-{% endfor %}
-{% endfor %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-{% endblock %} 
 
-{% block scripts %}
-{{super()}}
+{% for i in golang %}
+    {% set has_run = false %}
+    {% for j in i %}
+        {% if result.id == j.eat.id %}
+            {% if not has_run %}
+                <h1>{{ j.category }}</h1>
+                {% set has_run = true %}
+            {% endif %}
+            <div class="card mb-3" style="max-width: 540px;">
+                <div class="row g-0">
+                    <div class="col-md-4">
+                        {% for pic in listing[j.id] %}
+                            <img src="data:image/jpeg;base64,{{ pic }}" class="img-fluid rounded-start" alt="Product Image">
+                        {% endfor %}
+                    </div>  
+                    <div class="col-md-8"> 
+                        <div class="card-body">
+                            <h5 class="card-title">{{ j.product }}</h5>
+                            <p class="card-text">{{ j.description }}</p>
+                            <p class="card-text"><small class="text-body-secondary">$ {{ j.price }}</small></p>
+                            <button type="button" class="btn btn-success"><a href="{{url_for('blog', index=result.id)}}">Blog</a></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-var number = parseInt(($(".h-100 h2").text()));  
-$(".btn").on("click", function(){
- if( $(this).text() == "follow"){ 
-  number = number + 1 ;
-  $(this).text("unfollow").css("background-color", "red");
-  $(".flavour").text("followers: " + number);
-  const id = $(".h-100  p").text();
-  const url = "http://127.0.0.1:8000/profile/" + id;
-  fetch(url,{"method": "POST"}).then(response => response.text);
-}
- else{
-  $(this).text("follow").css("background-color", "green");
-  number = number - 1  ;
-  $(".flavour").text("followers: " + number);
-  const id = $(".h-100  p").text();
-  const url = "http://127.0.0.1:8000/unfollow/" + id;
-  console.log(id)
-  fetch(url,{"method": "POST"}).then(response => response.text);
-}  
-})  
-$(".card-body .btn-danger").on("click", function(){  
-const id = $(this).attr("name");
-const url = "http://127.0.0.1:8000/selenium/" +  id;
-fetch(url,{"method": "POST"}).then(response => response.text).then($(this).attr('disabled', true).text("Add Product").css("background-color", "gray")).then(alert("successful"));
-})
+$(document).ready(function() {
+    let number = parseInt($(".flavour").text().replace("followers: ", ""));  
+
+    $(".btn-success, .btn-danger").on("click", function() {
+        const id = $(".not_active").text();
+        const isFollowing = $(this).text().trim() === "Unfollow";
+        const url = isFollowing 
+            ? `http://127.0.0.1:8000/unfollow/${id}` 
+            : `http://127.0.0.1:8000/profile/${id}`;
+        
+        fetch(url, { method: "POST" })
+            .then(response => response.text())
+            .then(() => {
+                number += isFollowing ? -1 : 1;
+                $(".flavour").text(`followers: ${number}`);
+                $(this).text(isFollowing ? "Follow" : "Unfollow")
+                       .toggleClass("btn-success btn-danger")
+                       .css("background-color", isFollowing ? "green" : "red");
+            })
+            .catch(err => console.error("Error:", err));
+    });
+});
 </script>
 {% endblock %}
+
+
+

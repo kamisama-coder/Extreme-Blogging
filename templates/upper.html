@@ -4,50 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    {% block styles %}
-        {{ bootstrap.load_css() }}
-    {% endblock %}
     <title>Boiling Plate</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ENjdO4Dr2bkBIFxQpeo5e7kUt8CU9EIsD35o6qLGzTZLlR9gwdPr8P8dSkpGkn7+" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body> 
+<body>
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="{{ url_for('my_route')}}">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="{{ url_for('new_show') }}">Price Tracker</a>
-              </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"> Dropdown
-                </a>
-                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <a class="dropdown-item" href="{{ url_for('hello_world') }}">Add Product</a>
-                  <a class="dropdown-item" href="{{ url_for('bhoot') }}">login</a>
-                  <a class="dropdown-item" href="{{ url_for('hello_world1') }}">admin</a>
-                </div>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-              </li>
-            </ul>
-            <form class="d-flex" role="search" action="url_for('search')">
-              <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" namen="searched">
-              <button class="btn btn-outline-success" type="submit">Search</button>
-            </form>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="{{ url_for('button') }}">Button</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('product_registration') }}">Add Product</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="{{ url_for('registration') }}">Registration</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-      </nav>
-<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
-{% block content %}  
-{% endblock %}
-  
-{% block scripts %}       
-     {{ bootstrap.load_js() }}
-{% endblock %}
+    </nav>
 
-  
+    {% block content %}{% endblock %}
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-qrv7TgD6rdosM0LtVURHBVvvrzHqVbV7Z1kk8qOw5V1gaSBB3gjVV0z38BXxnbh9" crossorigin="anonymous"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
-</html>  
+</html>
 
