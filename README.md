@@ -1,5 +1,5 @@
 🌟 Marketplace BlogHub
-1.🚀 Marketplace BlogHub is a blogging platform tailored for creating, sharing, and discovering blogs about items from popular marketplaces like Amazon, AliExpress, and more. It empowers bloggers and readers with unique features, including object-based search and profile promotions based on followers.
+🚀 Marketplace BlogHub is a blogging platform tailored for creating, sharing, and discovering blogs about items from popular marketplaces like Amazon, AliExpress, and more. It empowers bloggers and readers with unique features, including object-based search and profile promotions based on followers.
 
 🎯 Features
 1. Write Blogs for Marketplaces
