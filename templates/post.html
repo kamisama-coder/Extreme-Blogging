@@ -1,0 +1,69 @@
+{% extends "upper.html" %}
+{% block content %}
+<!-- Page Header-->
+<header class="masthead" style="background-image: url('{{post.img_url}}')">
+  <div class="container position-relative px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+      <div class="col-md-10 col-lg-8 col-xl-7">
+        <div class="post-heading">
+          <h1>{{ post.title }}</h1>
+          <h2 class="subheading">{{ post.subtitle }}</h2>
+         
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Post Content -->
+<article>
+  <div class="container px-4 px-lg-5">
+    <div class="row gx-4 gx-lg-5 justify-content-center">
+      <div class="col-md-10 col-lg-8 col-xl-7">
+        {{ post.body|safe }}
+        <!--Only show Edit Post button if user id is 1 (admin user) -->
+        <!-- Comments Area -->
+        <!-- Load the CKEditor -->
+        {{ ckeditor.load() }}
+        <!-- Configure it with the name of the form field from CommentForm -->
+        {{ ckeditor.config(name='comment_text') }}
+        <!-- Create the wtf quick form from CommentForm -->
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group mb-3">
+                <label for="comment_text">{{ form.comment_text.label }}</label>
+                {{ form.comment_text(class="form-control") }}
+                {% for error in form.comment_text.errors %}
+                    <small class="text-danger">{{ error }}</small>
+                {% endfor %}
+            </div>
+
+            <div class="form-group text-center">
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+        <div class="comment">
+          <ul class="commentList">
+            <!-- Show all comments -->
+            {% for comment in post.comments: %}
+            <li>
+              <div class="commenterImage">
+                <img
+                  src="{{ comment.comment_author.email | gravatar }}"
+                />
+              </div>
+              <div class="commentText">
+                {{comment.text|safe}}
+                <span class="sub-text">{{comment.comment_author.name}}</span>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+{% endblock %}

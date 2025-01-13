@@ -31,7 +31,7 @@
                             <h5 class="card-title">{{ j.product }}</h5>
                             <p class="card-text">{{ j.description }}</p>
                             <p class="card-text"><small class="text-body-secondary">$ {{ j.price }}</small></p>
-                            <button type="button" class="btn btn-success"><a href="{{url_for('blog', index=result.id)}}">Blog</a></button>
+                            <button type="button" class="btn btn-primary"><a href="{{url_for('blog', index=j.id)}}">Blog</a></button>
                         </div>
                     </div>
                 </div>

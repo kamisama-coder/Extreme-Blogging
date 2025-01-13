@@ -8,6 +8,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from flask_wtf.file import FileField, FileRequired, FileAllowed, MultipleFileField
 from wtforms.validators import DataRequired, URL, Email, Length
+from flask_ckeditor import CKEditor,CKEditorField
+from datetime import date
 import random
 import time
 import base64
@@ -16,6 +18,7 @@ import base64
 app = Flask(__name__)
 app.secret_key = 'dsgzdfshdfhdgxhghdfhdf'
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+ckeditor = CKEditor(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///dukan.db"
@@ -39,6 +42,16 @@ gravatar = Gravatar(app,
 def load_user(user_id):
     return db.get_or_404(Details, user_id)
 
+class CreatePostForm(FlaskForm):
+    title = StringField("Blog Post Title", validators=[DataRequired()])
+    subtitle = StringField("Subtitle", validators=[DataRequired()])
+    img_url = StringField("Blog Image URL", validators=[DataRequired(), URL()])
+    body = CKEditorField("Blog Content", validators=[DataRequired()])
+    submit = SubmitField("Submit Post")
+
+class CommentForm(FlaskForm):
+    comment_text = CKEditorField("Comment", validators=[DataRequired()])
+    submit = SubmitField("Submit Comment")    
 
 class MyForm(FlaskForm):
     name = StringField('name', validators=[DataRequired()])
@@ -71,6 +84,9 @@ class Details(UserMixin, db.Model):
     followers = db.Column(db.Integer, nullable=False)
     chips = relationship("Book", back_populates="ate")
     kurkure = relationship("Description", back_populates="eat")
+    posts = relationship("BlogPost", back_populates="author")
+   
+    comments = relationship("Comment", back_populates="comment_author")
        
 
 class Description(db.Model):
@@ -85,6 +101,7 @@ class Description(db.Model):
     eat_id = db.Column(db.Integer, db.ForeignKey("manager.id"))
     url = db.Column(db.String(250), nullable=True)
     option = db.Column(db.String(250), nullable=True)
+    blog_child = relationship("BlogPost", back_populates="blog_parent")
 
 
 class Book(db.Model):
@@ -97,6 +114,35 @@ class Book(db.Model):
     ate = relationship("Details", back_populates="chips") 
     author_id = db.Column(db.Integer, db.ForeignKey("product_imf.id"))
     ate_id = db.Column(db.Integer, db.ForeignKey("manager.id"))
+
+class BlogPost(db.Model):
+    __tablename__ = "blog_posts"
+    id = db.Column(db.Integer, primary_key=True)
+   
+    author_id = db.Column(db.Integer, db.ForeignKey("manager.id"))
+    
+    author = relationship("Details", back_populates="posts")
+    title = db.Column(db.String(250), unique=True, nullable=False)
+    subtitle = db.Column(db.String(250), nullable=False)
+    date = db.Column(db.String(250), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    img_url = db.Column(db.String(250), nullable=False)
+    blog_parent = relationship("Description", back_populates="blog_child")
+    comments = relationship("Comment", back_populates="parent_post")
+    source_id = db.Column(db.Integer, db.ForeignKey("product_imf.id"))
+
+
+class Comment(db.Model):
+    __tablename__ = "comments"
+    id = db.Column(db.Integer, primary_key=True)
+    text = db.Column(db.Text, nullable=False)
+  
+    author_id = db.Column(db.Integer, db.ForeignKey("manager.id"))
+    comment_author = relationship("Details", back_populates="comments")
+   
+    post_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"))
+    parent_post = relationship("BlogPost", back_populates="comments")    
+
 
 
 class Follow(db.Model):
@@ -359,7 +405,45 @@ def delete(index):
 
 @app.route('/blog/<index>', methods=['GET', 'POST'])
 def blog(index):
-    pass
+    requested_product = db.get_or_404(Description, index)
+    blog_record = db.session.execute(
+        db.select(BlogPost).where(
+        BlogPost.source_id == current_user.id
+        )).scalar()
+    if current_user.id == requested_product.eat.id:
+        if blog_record == None:
+            form = CreatePostForm()
+            if form.validate_on_submit():
+                new_post = BlogPost(
+                    title=form.title.data,
+                    source_id = index,
+                    subtitle=form.subtitle.data,
+                    body=form.body.data,
+                    img_url=form.img_url.data,
+                    author=current_user,
+                    date=date.today().strftime("%B %d, %Y")
+                )
+                db.session.add(new_post)
+                db.session.commit()
+                return redirect(url_for("button"))
+            return render_template("make-post.html", form=form, current_user=current_user)
+    if blog_record != None:
+        requested_post = db.get_or_404(BlogPost, blog_record.id)
+        comment_form = CommentForm()
+   
+        if comment_form.validate_on_submit():
+            if not current_user.is_authenticated:
+                flash("You need to login or register to comment.")
+                return redirect(url_for("login"))
+            new_comment = Comment(
+                text=comment_form.comment_text.data,
+                comment_author=current_user,
+                parent_post=requested_post
+                )
+            db.session.add(new_comment)
+            db.session.commit()    
+        return render_template("post.html", post=requested_post, current_user=current_user, form=comment_form)
+
              
 # Create an admin-only decorator
 # def admin_only(f):
