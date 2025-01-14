@@ -1,17 +1,33 @@
-{% extends"upper.html" %}
-{% block content %}
-{% for i in all_books %}
-<div class="card" style="width: 18rem;">
-  {% for pic in listing[i.id] %}
-  <img src="data:image/jpeg;base64,{{ pic }}" class="card-img-top" alt="...">
-  {% endfor %}
-  <div class="card-body">
-    <h5 class="card-title">{{i.product}}</h5>
-    <p class="card-text">{{i.description}}</p>
-    <p class="card-text"><small class="text-body-secondary">${{i.price}}</small></p>
-    <a href="#" class="btn btn-primary">Go somewhere</a>
-  </div>
-</div>
-{% endfor %}
+{% extends "upper.html" %}
 
-{% endblock %}  
+{% block content %}
+  {% if source is not none %}
+    
+    {% for source_item in source %}
+      <div class="card" style="width: 18rem;">
+        <div class="card-body">
+          <h5 class="card-title">{{ source_item.product }}</h5>
+          <p class="card-text">{{ source_item.description }}</p>
+          <p class="card-text"><small class="text-body-secondary">${{ source_item.price }}</small></p>
+          <p class="card-text">{{ source_item.eat.name }}</p>
+          <a href="{{url_for('blog', index=source_item.id)}}" class="btn btn-primary">Go somewhere</a>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    
+    {% for book in all_books %}
+      <div class="card" style="width: 18rem;">
+        {% for pic in listing[book.id] %}
+          <img src="data:image/jpeg;base64,{{ pic }}" class="card-img-top" alt="...">
+        {% endfor %}
+        <div class="card-body">
+          <h5 class="card-title">{{ book.product }}</h5>
+          <p class="card-text">{{ book.description }}</p>
+          <p class="card-text"><small class="text-body-secondary">${{ book.price }}</small></p>
+          <a href="#" class="btn btn-primary">Go somewhere</a>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

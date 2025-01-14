@@ -444,6 +444,12 @@ def blog(index):
             db.session.commit()    
         return render_template("post.html", post=requested_post, current_user=current_user, form=comment_form)
 
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    query = request.form.get("search")
+    source = db.session.execute(db.select(Description).where(Description.url == query )).scalars()
+    return render_template("product.html", source=source)
+
              
 # Create an admin-only decorator
 # def admin_only(f):
