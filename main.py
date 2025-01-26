@@ -273,11 +273,12 @@ def profile(index):
       new_list = []
       for unique in unique_category:
         book_to_update = db.session.execute(db.select(Description).where(Description.category == unique )).scalars()
-        new_list.append(book_to_update)     
+        new_list.append(book_to_update)    
       result= db.get_or_404(Details, index)
-      followers = db.session.execute(db.select(Follow).where(Follow.follower_id == current_user.id )).scalars()
-      followers_list = list(followers)
-      size = len(followers_list)  
+      followed_user = db.session.execute(
+                db.select(Details).where(Details.id == index)
+            ).scalar_one_or_none()
+      size = followed_user.followers
       follow_record = db.session.execute(
         db.select(Follow).where(
         Follow.follower_id == current_user.id,
@@ -388,6 +389,7 @@ def promotional(index):
 @app.route('/delete/<index>',  methods=['GET', 'POST'])
 def delete(index):
     # Retrieve the description to delete
+    # have to make it delete the blog post
     book_to_delete = db.get_or_404(Description, index)
 
     media_to_delete = db.session.execute(
