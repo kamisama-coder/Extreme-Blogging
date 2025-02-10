@@ -1,31 +1,71 @@
-{% extends"upper.html" %}
+{% extends "upper.html" %}
 {% block content %}
 <div class="button-container">
-<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=0-500)}}">0-500</a></button>
-<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=500-1000)}}">500-1000</a></button>
-<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=1000-1500)}}">1000-1500</a></button>
-<button type="button" class="btn btn-success"><a href="{{url_for('promotional', index=2000)}}">more than 2000</a></button>
-<div id="output"></div>
+    <h1>Followers</h1>
+    <button type="button" class="btn btn-success send-data">0-500</button>
+    <button type="button" class="btn btn-success send-data">500-1000</button>
+    <button type="button" class="btn btn-success send-data">1000-1500</button>
+    <button type="button" class="btn btn-success send-data">more than 2000</button>
 </div>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-{%endblock%}
-  
-<!-- {% block scripts %}       
-{{ super() }}
-<script>
-$(".btn").on("click",function(){fetch("/promotional_site", {
-    "method": "POST",
-    "headers": {"Content-Type": "application/json"},
-    "body":  JSON.stringify({data:$(this).text()}),
-})
-.then(response => {
-        window.location = response.url; // Redirect to the new URL
-})
-.catch(error => {
-    console.error('Fetch error:', error);
-    // Handle other types of errors, such as network issues
-});
-});
-</script>
-{% endblock %} -->
 
+<style>
+    .active {
+    background-color: #ff9800 !important; 
+    color: white !important;
+    }
+</style>
+
+{% for category in unique_categories %}
+<div class="button-container">
+    <h1>Category</h1>
+    <button type="button" class="btn btn-primary send-data">{{ category }}</button>
+</div>    
+{% endfor %}
+
+<button id="filter-button" class="btn btn-warning">Apply Filter</button>
+
+<div id="output"></div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+<script>
+    $(document).ready(function () {
+        $(".send-data").click(function () {
+            $(this).toggleClass("active");
+        });
+
+        $("#filter-button").click(function () {
+            let selectedData = {};
+
+            let followers = [];
+            $(".btn-success.active").each(function () {
+                followers.push($(this).text().trim());
+            });
+            if (followers.length > 0) {
+                selectedData["followers"] = followers;
+            }
+
+            let categories = [];
+            $(".btn-primary.active").each(function () {
+                categories.push($(this).text().trim());
+            });
+            if (categories.length > 0) {
+                selectedData["categories"] = categories;
+            }
+
+            $.ajax({
+                url: "/promotional_site",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(selectedData),
+                success: function (response) {
+                    $("#output").html(response.html);
+                },
+                error: function (error) {
+                    console.log("Error:", error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}  

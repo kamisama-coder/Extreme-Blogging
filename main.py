@@ -160,7 +160,12 @@ with app.app_context():
 
 @app.route('/button',  methods=['GET', 'POST'])
 def button():
-    return render_template("button.html")
+    result = db.session.execute(
+    db.select(Description.category).distinct()
+    ).scalars()
+
+    unique_categories = list(result)
+    return render_template("button.html",unique_categories=unique_categories)
 
 
 @app.route('/forgot_password',  methods=['GET', 'POST'])
@@ -352,15 +357,23 @@ def product_registration():
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-@app.route('/promotional_site/<index>',  methods=['GET', 'POST'])
-def promotional(index):
-  if "-" in index:  
-    text = index
+@app.route('/promotional_site',  methods=['GET', 'POST'])
+def promotional():
+  data = request.get_json()
+  index = data.get("followers")
+  categorm = data.get("categories")
+  all_images = db.session.execute(
+    db.select(Book)
+    .join(Description) 
+    .where(Description.category == categorm[0])  
+    .order_by(Book.id)
+).scalars()
+  list=[]
+  if "-" in index[0]:  
+    text = index[0]
     numbers = text.split('-')
     first_number = int(numbers[0])
     second_number = int(numbers[1]) 
-    all_images = db.session.execute(db.select(Book).order_by(Book.id)).scalars()
-    list=[]
     for images in all_images:
       if first_number <= images.ate.followers <= second_number:
         list_dic = {}
@@ -370,12 +383,13 @@ def promotional(index):
         list_dic["video"] = base64_video_data
         list_dic["id"] = images.ate.id
         list.append(list_dic)
-    return render_template("video.html", list=list)
+    rendered_html =  render_template("video.html", list=list)
+    return jsonify({"html": rendered_html})
   else:
-    all_images = db.session.execute(db.select(Book).order_by(Book.id)).scalars()
-    list=[]
+    words = index[0].split()  
+    number = int(words[-1])
     for images in all_images:
-      if images.ate.followers >= index:
+      if images.ate.followers >= number:
         list_dic = {}
         encoded_img_data = base64.b64encode(images.product_blob).decode('utf-8')
         base64_video_data = base64.b64encode(images.video_blob).decode('utf-8')
@@ -383,7 +397,8 @@ def promotional(index):
         list_dic["video"] = base64_video_data
         list_dic["id"] = images.ate.id
         list.append(list_dic)
-    return render_template("video.html", list=list)    
+    rendered_html= render_template("video.html", list=list)    
+    return jsonify({"html": rendered_html})  
 
 
 @app.route('/delete/<index>',  methods=['GET', 'POST'])
