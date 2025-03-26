@@ -1,15 +1,63 @@
 {% extends 'upper.html' %}   
 {% block content %}
-<div class="container">
-{% for read in list %}
-<div class="player">
+
+<div class="container mt-4">
+    <div class="row">
+        {% for read in list %}
+        
+        <!-- Product Card -->
+        <div class="col-md-4 mb-4">
+            <div class="card" style="width: 100%;">
+                <img src="data:image/jpeg;base64,{{ read['data'] }}" class="card-img-top" alt="Product Image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ read['objects'].product }}</h5>
+                    <p class="card-text">{{ read['objects'].description }}</p>
+                    <p class="card-text">
+                        <small class="text-body-secondary">
+                            ${{ read['objects'].price }}
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Player -->
+        <div class="col-md-4 mb-4">
+            <div class="video-container">
+                <video width="100%" height="267"
+                       poster="data:image/jpeg;base64,{{ read['pics'] }}" 
+                       controls>
+                    <source src="data:video/mp4;base64,{{ read['video'] }}" type="video/mp4">
+                    <track src="dist/mediaelement.vtt" srclang="en" label="English" kind="captions">
+                    <track src="dist/mediaelement_german.vtt" srclang="de" label="Deutsch" kind="subtitles">
+                </video>
+            </div>
+        </div>
+
+        <!-- Buttons Section -->
+        <div class="col-md-4 mb-4">
+            <div class="button-group">
+                <a href="{{ url_for('profile', index=read['id']) }}" class="btn btn-success">
+                    Profile
+                </a>
+                <a href="{{ url_for('blog', index=read['objects'].id) }}" class="btn btn-primary">
+                    Blog
+                </a>
+            </div>
+        </div>
+
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+
+<!-- <div class="player">
    <video  id="player-demo" width="640" height="267" poster="data:image/jpeg;base64,{{read['pics']}}" style="max-width: 100%" controls="">
       <source src="data:video/mp4;base64,{{read['video']}}" type="video/mp4">
       <track src="dist/mediaelement.vtt" srclang="en" label="English" kind="captions" type="text/vtt">
       <track src="dist/mediaelement_german.vtt" srclang="de" label="Deutsch" kind="subtitles" type="text/vtt">
    </video>
    <button type="button" class="btn btn-success"><a href="{{url_for('profile', index=read['id'])}}">Profile</a></button>   
-</div>
-{% endfor %}
-</div>
-{% endblock %}
+</div> -->

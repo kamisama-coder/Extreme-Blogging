@@ -85,10 +85,10 @@ class Details(UserMixin, db.Model):
     chips = relationship("Book", back_populates="ate")
     kurkure = relationship("Description", back_populates="eat")
     posts = relationship("BlogPost", back_populates="author")
-   
-    comments = relationship("Comment", back_populates="comment_author")
-       
 
+    comments = relationship("Comment", back_populates="comment_author")
+
+    
 class Description(db.Model):
     __tablename__ = 'product_imf'
     id = db.Column(db.Integer, primary_key=True)
@@ -367,7 +367,7 @@ def promotional():
     .join(Description) 
     .where(Description.category == categorm[0])  
     .order_by(Book.id)
-).scalars()
+  ).scalars()
   list=[]
   if "-" in index[0]:  
     text = index[0]
@@ -379,11 +379,15 @@ def promotional():
         list_dic = {}
         encoded_img_data = base64.b64encode(images.product_blob).decode('utf-8')
         base64_video_data = base64.b64encode(images.video_blob).decode('utf-8')
+        base64_uploaded_data = base64.b64encode(images.my_blob).decode('utf-8')
+        list_dic["data"] = base64_uploaded_data
         list_dic["pics"] = encoded_img_data
         list_dic["video"] = base64_video_data
         list_dic["id"] = images.ate.id
+        list_dic["objects"] = images.author
         list.append(list_dic)
     rendered_html =  render_template("video.html", list=list)
+    print( list[0]['objects'].product)
     return jsonify({"html": rendered_html})
   else:
     words = index[0].split()  
@@ -393,9 +397,12 @@ def promotional():
         list_dic = {}
         encoded_img_data = base64.b64encode(images.product_blob).decode('utf-8')
         base64_video_data = base64.b64encode(images.video_blob).decode('utf-8')
+        base64_uploaded_data = base64.b64encode(images.my_blob).decode('utf-8')
+        list_dic["data"] = base64_uploaded_data
         list_dic["pics"] = encoded_img_data
         list_dic["video"] = base64_video_data
         list_dic["id"] = images.ate.id
+        list_dic["objects"] = images.author
         list.append(list_dic)
     rendered_html= render_template("video.html", list=list)    
     return jsonify({"html": rendered_html})  
