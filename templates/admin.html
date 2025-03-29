@@ -2,26 +2,25 @@
 {% block content %}
 {% for i in all_books%}
 {% if check.id == i.eat.id %}
-<div class="card mb-3" style="max-width: 540px;">
-    <div class="row g-0">
-      <div class="col-md-4">
-        {% for pic in change[i.id] %}
-        
-        <img src="data:image/jpeg;base64,{{ pic }}" class="img-fluid rounded-start" alt="...">
-        {% endfor %}
-        
+<div class="col-md-4 mb-4">
+  <div class="card" style="width: 100%;">
+    {% for pic in change[i.id] %}
+      <img src="data:image/jpeg;base64,{{ pic }}" class="card-img-top" alt="Product Image">
+    {% endfor %}  
+      <div class="card-body">
+          <h5 class="card-title">{{ i.product }}</h5>
+          <p class="card-text">{{ i.description }}</p>
+          <p class="card-text">
+              <small class="text-body-secondary">
+                  ${{ i.price }}
+              </small>
+          </p>
       </div>
-      <div class="col-md-8"> 
-        <div class="card-body">
-          <h5 class="card-title">{{i.product}}</h5>
-          <p class="card-text">{{i.description}}</p>
-          <p class="card-text"><small class="text-body-secondary">${{i.price}}</small></p>
-          <a href="{{url_for('delete', index=i.id)}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Delete</a>
-          <a href="{{url_for('blog', index=i.id)}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Blog</a>
-        </div>
-      </div>
-    </div>
   </div>
+</div>
+<a href="{{url_for('delete', index=i.id)}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Delete</a>
+<a href="{{url_for('blog', index=i.id)}}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Blog</a>
 {% endif %}
 {% endfor %}
 {% endblock %}  
+
