@@ -44,7 +44,7 @@ def load_user(user_id):
     return db.get_or_404(Details, user_id)
 
 def upgraded_list(posts):
-    weights = np.array([post["likes"] if post["likes"] > 0 else 1 for post in posts], dtype=float)
+    weights = np.array([1 + post["likes"] if post["likes"] > 0 else 1 for post in posts], dtype=float)
 
     probabilities = weights / weights.sum()
 
@@ -468,6 +468,8 @@ def promotional():
         )).scalar()
         if blog_record != None:
             list_dic["likes"] = blog_record.likes 
+        else:   
+            list_dic["likes"] = 0  
         list_dic["data"] = base64_uploaded_data
         list_dic["pics"] = encoded_img_data
         list_dic["video"] = base64_video_data
