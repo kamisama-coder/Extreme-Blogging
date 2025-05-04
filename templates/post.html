@@ -21,6 +21,13 @@
     <div class="row gx-4 gx-lg-5 justify-content-center">
       <div class="col-md-10 col-lg-8 col-xl-7">
         {{ post.body|safe }}
+        <h1 class="flavour">Likes: {{ size }}</h1>
+        <p class="not_active">{{ post.id }}</p>
+        {% if thakan is none %}
+        <button type="button" class="btn btn-success">Like</button> 
+        {% else %}
+        <button type="button" class="btn btn-danger">Unlike</button> 
+        {% endif %}
         <!--Only show Edit Post button if user id is 1 (admin user) -->
         <!-- Comments Area -->
         <!-- Load the CKEditor -->
@@ -66,4 +73,32 @@
     </div>
   </div>
 </article>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    let number = parseInt($(".flavour").text().replace("Likes: ", ""));  
+
+    $(".btn-success, .btn-danger").on("click", function() {
+        const id = $(".not_active").text();
+        const isFollowing = $(this).text().trim() === "Unlike";
+        let url;
+        if (isFollowing === true) {
+            url = `http://127.0.0.1:8000/unlike/${id}`;
+        } else {
+            url = `http://127.0.0.1:8000/like/${id}`;
+        }    
+        fetch(url, { method: "POST" })
+            .then(response => response.text())
+            .then(() => {
+                number += isFollowing ? -1 : 1;
+                $(".flavour").text(`likes: ${number}`);
+                $(this).text(isFollowing ? "Like" : "Unlike")
+                       .toggleClass("btn-success btn-danger")
+                       .css("background-color", isFollowing ? "green" : "red");
+            })
+            .catch(err => console.error("Error:", err));
+    });
+});
+</script>
 {% endblock %}

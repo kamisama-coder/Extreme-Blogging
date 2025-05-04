@@ -8,6 +8,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField
 from flask_wtf.file import FileField, FileRequired, FileAllowed, MultipleFileField
 from wtforms.validators import DataRequired, URL, Email, Length
+import numpy as np
 from flask_ckeditor import CKEditor,CKEditorField
 from datetime import date
 import random
@@ -41,6 +42,17 @@ gravatar = Gravatar(app,
 @login_manager.user_loader
 def load_user(user_id):
     return db.get_or_404(Details, user_id)
+
+def upgraded_list(posts):
+    weights = np.array([post["likes"] if post["likes"] > 0 else 1 for post in posts], dtype=float)
+
+    probabilities = weights / weights.sum()
+
+    shuffled_indices = np.random.choice(len(posts), size=len(posts), replace=False, p=probabilities)
+
+    selected_posts = [posts[i] for i in shuffled_indices]
+    return selected_posts
+        
 
 class CreatePostForm(FlaskForm):
     title = StringField("Blog Post Title", validators=[DataRequired()])
@@ -130,7 +142,7 @@ class BlogPost(db.Model):
     blog_parent = relationship("Description", back_populates="blog_child")
     comments = relationship("Comment", back_populates="parent_post")
     source_id = db.Column(db.Integer, db.ForeignKey("product_imf.id"))
-
+    likes = db.Column(db.Integer, nullable=False)
 
 class Comment(db.Model):
     __tablename__ = "comments"
@@ -142,6 +154,15 @@ class Comment(db.Model):
    
     post_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"))
     parent_post = relationship("BlogPost", back_populates="comments")    
+
+class Like(db.Model):
+    __tablename__ = 'likes'
+    id = db.Column(db.Integer, primary_key=True)
+    liked_id = db.Column(
+        db.Integer,nullable=False)
+ 
+    liked_to = db.Column(
+        db.Integer,nullable=False)    
 
 
 
@@ -306,6 +327,40 @@ def check(index):
             followed_user.followers = (followed_user.followers or 0) - 1
             db.session.commit()
 
+@app.route("/like/<int:post_id>", methods=["POST"])
+def like(post_id):
+    user_id = current_user.id  
+
+    existing = Like.query.filter_by(liked_id=user_id, liked_to=post_id).first()
+    if existing:
+        flash("You already liked this post.")
+    else:
+        new_like = Like(liked_id=user_id, liked_to=post_id)
+        db.session.add(new_like)
+        db.session.commit()
+        flash("Post liked.")
+    post = BlogPost.query.get_or_404(post_id)
+    post.likes = post.likes + 1 if post.likes else 1
+    db.session.commit()    
+
+@app.route("/unlike/<int:post_id>", methods=["POST"])
+def unlike(post_id):
+    user_id = current_user.id 
+
+    like = Like.query.filter_by(liked_id=user_id, liked_to=post_id).first()
+    if like:
+        db.session.delete(like)
+        db.session.commit()
+        flash("Post unliked.")
+    else:
+        flash("You haven't liked this post.")       
+    post = BlogPost.query.get_or_404(post_id)
+    if post.likes and post.likes > 0:
+        post.likes -= 1
+    db.session.commit()
+    flash("You unliked the post!", "info")     
+
+
 @app.route('/login',  methods=['GET', 'POST'])
 def login():
     loginform = LoginForm()
@@ -380,13 +435,22 @@ def promotional():
         encoded_img_data = base64.b64encode(images.product_blob).decode('utf-8')
         base64_video_data = base64.b64encode(images.video_blob).decode('utf-8')
         base64_uploaded_data = base64.b64encode(images.my_blob).decode('utf-8')
+        blog_record = db.session.execute(
+        db.select(BlogPost).where(
+        BlogPost.source_id == images.author.id
+        )).scalar()
+        if blog_record != None:
+            list_dic["likes"] = blog_record.likes 
+        else:
+            list_dic["likes"] = 0    
         list_dic["data"] = base64_uploaded_data
         list_dic["pics"] = encoded_img_data
         list_dic["video"] = base64_video_data
         list_dic["id"] = images.ate.id
         list_dic["objects"] = images.author
         list.append(list_dic)
-    rendered_html =  render_template("video.html", list=list)
+    new_list = upgraded_list(list)
+    rendered_html =  render_template("video.html", list=new_list)
     print( list[0]['objects'].product)
     return jsonify({"html": rendered_html})
   else:
@@ -398,15 +462,22 @@ def promotional():
         encoded_img_data = base64.b64encode(images.product_blob).decode('utf-8')
         base64_video_data = base64.b64encode(images.video_blob).decode('utf-8')
         base64_uploaded_data = base64.b64encode(images.my_blob).decode('utf-8')
+        blog_record = db.session.execute(
+        db.select(BlogPost).where(
+        BlogPost.source_id == images.author.id
+        )).scalar()
+        if blog_record != None:
+            list_dic["likes"] = blog_record.likes 
         list_dic["data"] = base64_uploaded_data
         list_dic["pics"] = encoded_img_data
         list_dic["video"] = base64_video_data
         list_dic["id"] = images.ate.id
         list_dic["objects"] = images.author
         list.append(list_dic)
-    rendered_html= render_template("video.html", list=list)    
-    return jsonify({"html": rendered_html})  
-
+    new_list = upgraded_list(list)
+    rendered_html= render_template("video.html", list=new_list)    
+    return jsonify({"html": rendered_html}) 
+  
 
 @app.route('/delete/<index>',  methods=['GET', 'POST'])
 def delete(index):
@@ -430,14 +501,19 @@ def delete(index):
 @app.route('/blog/<index>', methods=['GET', 'POST'])
 def blog(index):
     requested_product = db.get_or_404(Description, index)
+    follow_record = db.session.execute(
+        db.select(Like).where(
+        Like.liked_id == current_user.id,
+        Like.liked_to == requested_product.eat.id
+        )).scalar()
     blog_record = db.session.execute(
         db.select(BlogPost).where(
-        BlogPost.source_id == current_user.id
+        BlogPost.source_id == index
         )).scalar()
     if current_user.id == requested_product.eat.id:
         if blog_record == None:
             form = CreatePostForm()
-            if form.validate_on_submit():
+            if form.validate_on_submit():         
                 new_post = BlogPost(
                     title=form.title.data,
                     source_id = index,
@@ -445,7 +521,8 @@ def blog(index):
                     body=form.body.data,
                     img_url=form.img_url.data,
                     author=current_user,
-                    date=date.today().strftime("%B %d, %Y")
+                    date=date.today().strftime("%B %d, %Y"),
+                    likes = 0
                 )
                 db.session.add(new_post)
                 db.session.commit()
@@ -466,7 +543,8 @@ def blog(index):
                 )
             db.session.add(new_comment)
             db.session.commit()    
-        return render_template("post.html", post=requested_post, current_user=current_user, form=comment_form)
+        size = blog_record.likes    
+        return render_template("post.html", post=requested_post, current_user=current_user, form=comment_form, thakan=follow_record, size=size)
 
 @app.route('/search', methods=['GET', 'POST'])
 def search():
