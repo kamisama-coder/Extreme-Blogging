@@ -449,6 +449,7 @@ def promotional():
         list_dic["id"] = images.ate.id
         list_dic["objects"] = images.author
         list.append(list_dic)
+    random.shuffle(list)    
     new_list = upgraded_list(list)
     rendered_html =  render_template("video.html", list=new_list)
     print( list[0]['objects'].product)
@@ -476,6 +477,7 @@ def promotional():
         list_dic["id"] = images.ate.id
         list_dic["objects"] = images.author
         list.append(list_dic)
+    random.shuffle(list)    
     new_list = upgraded_list(list)
     rendered_html= render_template("video.html", list=new_list)    
     return jsonify({"html": rendered_html}) 
